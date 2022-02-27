@@ -69,9 +69,13 @@ runs:
         ${{ inputs.image-name }}:${{ inputs.image-tag }} \
         /test/jsonnet-lint/simple_test.sh
 
-    - name: Test jsonnet-bundler
+    - name: "Test jsonnet-bundler: install from git"
       shell: bash
-      run: docker run --rm ${{ inputs.image-name }}:${{ inputs.image-tag }} jb --version
+      run: |
+        docker run --rm \
+        -v "$PWD/test/":/test -w /tmp \
+        ${{ inputs.image-name }}:${{ inputs.image-tag }} \
+        /test/jsonnet-bundler/git_test.sh
 
     - name: "Test k8s-libsonnet: default k8s version"
       shell: bash

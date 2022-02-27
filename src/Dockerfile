@@ -15,7 +15,7 @@ COPY docsonnet /docsonnet
 WORKDIR /docsonnet
 RUN go install .
 
-FROM alpine:3.15.0
+FROM alpine/git:v2.32.0
 
 COPY --from=builder /go/bin/* /usr/local/bin/
 
