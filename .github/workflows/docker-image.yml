@@ -1,0 +1,87 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  IMAGE_NAME: bronzedeer/k8s-jsonnet-runner
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'true'
+
+    - name: Build the Docker image
+      run: docker build src --tag ${{ env.IMAGE_NAME}}:${{ env.IMAGE_TAG }}
+
+    - name: Test docsonnet
+      run: |
+        docker run --rm \
+        -v "$PWD/test/":/test -w /tmp \
+        ${{ env.IMAGE_NAME}}:${{ env.IMAGE_TAG }} \
+        /test/docsonnet/simple_test.sh
+
+    - name: Test NO_DOCSONNET
+      run: |
+        docker run --rm \
+        -v "$PWD/test/":/test -w /tmp \
+        -e "NO_DOCSONNET=true" \
+        ${{ env.IMAGE_NAME}}:${{ env.IMAGE_TAG }} \
+        /test/docsonnet/no_docsonnet_test.sh
+
+    - name: Test jsonnet
+      run: |
+        docker run --rm \
+        -v "$PWD/test/":/test -w /tmp \
+        ${{ env.IMAGE_NAME}}:${{ env.IMAGE_TAG }} \
+        /test/jsonnet/simple_test.sh
+
+    - name: Test jsonnetfmt
+      run: |
+        docker run --rm \
+        -v "$PWD/test/":/test -w /tmp \
+        ${{ env.IMAGE_NAME}}:${{ env.IMAGE_TAG }} \
+        /test/jsonnetfmt/simple_test.sh
+
+    - name: Test jsonnet-lint
+      run: |
+        docker run --rm \
+        -v "$PWD/test/":/test -w /tmp \
+        ${{ env.IMAGE_NAME}}:${{ env.IMAGE_TAG }} \
+        /test/jsonnet-lint/simple_test.sh
+
+    - name: Test jsonnet-bundler
+      run: docker run --rm ${{ env.IMAGE_NAME}}:${{ env.IMAGE_TAG }} jb --version
+
+    - name: "Test k8s-libsonnet: default k8s version"
+      run: |
+        docker run --rm \
+        -v "$PWD/test/":/test -w /tmp \
+        ${{ env.IMAGE_NAME}}:${{ env.IMAGE_TAG }} \
+        /test/k8s-libsonnet/simple_test.sh
+
+    - name: "Test k8s-libsonnet: different k8s version"
+      run: |
+        docker run --rm \
+        -v "$PWD/test/":/test -w /tmp \
+        -e "K8S_VERSION=1.23" \
+        ${{ env.IMAGE_NAME}}:${{ env.IMAGE_TAG }} \
+        /test/k8s-libsonnet/simple_test.sh
+
+    - name: "Test k8s-libsonnet: k.libsonnet setting"
+      run: |
+        docker run --rm \
+        -v "$PWD/test/":/test -w /tmp \
+        -e "K8S_VERSION=1.23" \
+        ${{ env.IMAGE_NAME}}:${{ env.IMAGE_TAG }} \
+        grep "1.23" "/runner/lib/k.libsonnet"
