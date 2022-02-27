@@ -1,0 +1,100 @@
+name: Build and Test Container
+description: "build and test the container"
+
+inputs:
+  image-name:
+    description: image name to use when tagging the image to be built
+    required: true
+    default: "bronzedeer/k8s-jsonnet-runner"
+  image-tag:
+    description: image tag to use when tagging the image to be built
+    required: true
+    default: "devel"
+
+outputs:
+  image-name:
+    description: name of the image built by this action
+    value: ${{ inputs.image-name }}
+  image-tag:
+    description: tag of the image built by this action
+    value: ${{ inputs.image-tag }}
+
+runs:
+  using: composite
+
+  steps:
+    - id: build
+      name: Build the Docker image
+      shell: bash
+      run: docker build src --tag ${{ inputs.image-name }}:${{ inputs.image-tag }}
+
+    - name: Test docsonnet
+      shell: bash
+      run: |
+        docker run --rm \
+        -v "$PWD/test/":/test -w /tmp \
+        ${{ inputs.image-name }}:${{ inputs.image-tag }} \
+        /test/docsonnet/simple_test.sh
+
+    - name: Test NO_DOCSONNET
+      shell: bash
+      run: |
+        docker run --rm \
+        -v "$PWD/test/":/test -w /tmp \
+        -e "NO_DOCSONNET=true" \
+        ${{ inputs.image-name }}:${{ inputs.image-tag }} \
+        /test/docsonnet/no_docsonnet_test.sh
+
+    - name: Test jsonnet
+      shell: bash
+      run: |
+        docker run --rm \
+        -v "$PWD/test/":/test -w /tmp \
+        ${{ inputs.image-name }}:${{ inputs.image-tag }} \
+        /test/jsonnet/simple_test.sh
+
+    - name: Test jsonnetfmt
+      shell: bash
+      run: |
+        docker run --rm \
+        -v "$PWD/test/":/test -w /tmp \
+        ${{ inputs.image-name }}:${{ inputs.image-tag }} \
+        /test/jsonnetfmt/simple_test.sh
+
+    - name: Test jsonnet-lint
+      shell: bash
+      run: |
+        docker run --rm \
+        -v "$PWD/test/":/test -w /tmp \
+        ${{ inputs.image-name }}:${{ inputs.image-tag }} \
+        /test/jsonnet-lint/simple_test.sh
+
+    - name: Test jsonnet-bundler
+      shell: bash
+      run: docker run --rm ${{ inputs.image-name }}:${{ inputs.image-tag }} jb --version
+
+    - name: "Test k8s-libsonnet: default k8s version"
+      shell: bash
+      run: |
+        docker run --rm \
+        -v "$PWD/test/":/test -w /tmp \
+        ${{ inputs.image-name }}:${{ inputs.image-tag }} \
+        /test/k8s-libsonnet/simple_test.sh
+
+    - name: "Test k8s-libsonnet: different k8s version"
+      shell: bash
+      run: |
+        docker run --rm \
+        -v "$PWD/test/":/test -w /tmp \
+        -e "K8S_VERSION=1.23" \
+        ${{ inputs.image-name }}:${{ inputs.image-tag }} \
+        /test/k8s-libsonnet/simple_test.sh
+
+    - name: "Test k8s-libsonnet: k.libsonnet setting"
+      shell: bash
+      run: |
+        docker run --rm \
+        -v "$PWD/test/":/test -w /tmp \
+        -e "K8S_VERSION=1.23" \
+        ${{ inputs.image-name }}:${{ inputs.image-tag }} \
+        grep "1.23" "/runner/lib/k.libsonnet"
