@@ -5,6 +5,7 @@ A container aimed at easing ci workflows in the kubernetes jsonnet ecosystem. It
 ## Environment Variables
 
 - `K8S_VERSION`: targeted kubernetes/k8s-libsonnet version, defaults to 1.21 if unset
+- `NO_DOCSONNET`: if set, will not put doc-util on the jpath
 
 ## Included tools
 
