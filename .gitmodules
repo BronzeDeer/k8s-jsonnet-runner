@@ -1,0 +1,12 @@
+[submodule "src/go-jsonnet"]
+	path = src/go-jsonnet
+	url = https://github.com/google/go-jsonnet/
+[submodule "src/jsonnet-bundler"]
+	path = src/jsonnet-bundler
+	url = https://github.com/jsonnet-bundler/jsonnet-bundler
+[submodule "src/k8s-libsonnet"]
+	path = src/k8s-libsonnet
+	url = https://github.com/jsonnet-libs/k8s-libsonnet
+[submodule "src/docsonnet"]
+	path = src/docsonnet
+	url = https://github.com/jsonnet-libs/docsonnet
